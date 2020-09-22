@@ -45,17 +45,17 @@ def get_file_data(filename):
         ValueError: if security level is invalid.
 
     """
-
-    create_date = os.path.getctime(filename)
+    filename_with_txt = filename + '.txt'
+    create_date = os.path.getctime(filename_with_txt)
     create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
-    edit_date = os.path.getmtime(filename)
+    edit_date = os.path.getmtime(filename_with_txt)
     edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
-    size = os.path.getsize(filename)
+    size = os.path.getsize(filename_with_txt)
 
-    with open(filename, 'r') as f:
+    with open(filename_with_txt, 'r') as f:
         data = f.read()
 
-    file_data = {'name': filename, 'data': data, 'create date': create_date, 'edit date': edit_date, 'size': size}
+    file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date, 'size': size}
     return file_data
 
 
@@ -92,7 +92,7 @@ def create_file(filename, content=None, security_level=None):
     Method generates name of file from random string with digits and latin letters.
 
     Args:
-        filename (str): Name of the file
+        filename (str): Name of the file without .txt extension
         content (str): String with file content,
         security_level (str): String with security level.
 
@@ -109,9 +109,10 @@ def create_file(filename, content=None, security_level=None):
         ValueError: if security level is invalid.
 
     """
-    assert not os.path.exists(filename), ("File already exists")
+    filename_with_txt = filename + ".txt"
+    assert not os.path.exists(filename_with_txt), ("File already exists")
 
-    with open(filename, 'w') as f:
+    with open(filename_with_txt, 'w') as f:
         f.write(content)
 
     return get_file_data(filename)
@@ -129,8 +130,10 @@ def delete_file(filename):
         AssertionError: if file does not exist.
 
     """
-    assert os.path.isfile(filename), ("File doesn't exist")
+    filename_with_txt = filename + ".txt"
+    assert os.path.isfile(filename_with_txt), ("File doesn't exist")
 
-    os.remove(filename)
-    print("file %1 deleted")
+    os.remove(filename_with_txt)
+
+    return filename_with_txt
 
