@@ -46,7 +46,17 @@ def get_file_data(filename):
 
     """
 
-    pass
+    create_date = os.path.getctime(filename)
+    create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+    edit_date = os.path.getmtime(filename)
+    edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+    size = os.path.getsize(filename)
+
+    with open(filename, 'r') as f:
+        data = f.read()
+
+    file_data = {'name': filename, 'data': data, 'create date': create_date, 'edit date': edit_date, 'size': size}
+    return file_data
 
 
 def get_files():
