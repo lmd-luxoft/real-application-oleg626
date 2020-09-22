@@ -23,7 +23,11 @@ def commandline_parser() -> argparse.ArgumentParser:
     pass
 
 
-def get_file_data(path):
+def get_files():
+    files = FileServiceNoClass.get_files()
+    return files
+
+def get_file_data(filename):
     """Get full info about file.
 
     Args:
@@ -42,17 +46,19 @@ def get_file_data(path):
         ValueError: if security level is invalid.
 
     """
+    assert os.path.exists(filename), ("File doesn't exist")
 
-    pass
+    file_data = FileServiceNoClass.get_file_data(filename)
+    return file_data
 
 
-def create_file(path):
+def create_file(file_name):
     """Create new .txt file.
 
     Method generates name of file from random string with digits and latin letters.
 
     Args:
-        path (str): Working directory path.
+        file_name (str): file to create without .txt extension.
 
     Returns:
         Dict, which contains name of created file. Keys:
@@ -67,15 +73,17 @@ def create_file(path):
         ValueError: if security level is invalid.
 
     """
+    file_content = input()
 
-    pass
+    return FileServiceNoClass.create_file(file_name, file_content)
 
 
-def delete_file(path):
+
+def delete_file(filename):
     """Delete file.
 
     Args:
-        path (str): Working directory path.
+        filename (str): File to delete without .txt extension
 
     Returns:
         Str with filename with .txt file extension.
@@ -84,8 +92,7 @@ def delete_file(path):
         AssertionError: if file does not exist.
 
     """
-
-    pass
+    return FileServiceNoClass.delete_file(filename)
 
 
 def change_dir(path):
@@ -98,8 +105,7 @@ def change_dir(path):
         Str with successfully result.
 
     """
-
-    pass
+    FileServiceNoClass.change_dir(path)
 
 
 def main():
@@ -113,9 +119,7 @@ def main():
     -h --help - help.
 
     """
-
     pass
-
 
 if __name__ == '__main__':
     main()
