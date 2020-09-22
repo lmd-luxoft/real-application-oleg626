@@ -84,12 +84,15 @@ def get_files():
 
 
 
-def create_file(content=None, security_level=None):
+def create_file(filename, content=None, security_level=None):
+
     """Create new .txt file.
+
 
     Method generates name of file from random string with digits and latin letters.
 
     Args:
+        filename (str): Name of the file
         content (str): String with file content,
         security_level (str): String with security level.
 
@@ -106,9 +109,12 @@ def create_file(content=None, security_level=None):
         ValueError: if security level is invalid.
 
     """
+    assert not os.path.exists(filename), ("File already exists")
 
-    pass
+    with open(filename, 'w') as f:
+        f.write(content)
 
+    return get_file_data(filename)
 
 def delete_file(filename):
     """Delete file.
