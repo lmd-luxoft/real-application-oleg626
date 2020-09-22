@@ -19,8 +19,12 @@ def change_dir(path):
         AssertionError: if directory does not exist.
 
     """
+    if not os.path.exists(path):
+        print("Path does not exist")
+        return
 
-    pass
+    os.chdir(path)
+    print("Current location", os.getcwd())
 
 
 def get_file_data(filename):
