@@ -3,6 +3,7 @@
 
 
 import os
+import datetime
 import sys
 import server.utils as utils
 
@@ -59,8 +60,18 @@ def get_files():
             size (str): size of file in bytes.
 
     """
+    list_of_files = os.listdir()
+    files_data = []
+    for file in list_of_files:
+        if os.path.isfile(file):
+            create_date = os.path.getctime(file)
+            create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+            edit_date = os.path.getmtime(file)
+            edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+            size = os.path.getsize(file)
+            files_data.append({'name' : file, 'create date': create_date, 'edit date' : edit_date, 'size': size})
+    return files_data
 
-    pass
 
 
 def create_file(content=None, security_level=None):
