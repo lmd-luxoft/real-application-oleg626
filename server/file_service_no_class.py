@@ -104,5 +104,8 @@ def delete_file(filename):
         AssertionError: if file does not exist.
 
     """
+    assert os.path.isfile(filename), ("File doesn't exist")
 
-    pass
+    os.remove(filename)
+    print("file %1 deleted")
+
