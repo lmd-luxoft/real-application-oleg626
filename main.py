@@ -18,9 +18,23 @@ def commandline_parser() -> argparse.ArgumentParser:
 
     Parse port and working directory parameters from command line.
 
-    """
+    -p --port - port (default: 8080).
+    -f --folder - working directory (absolute or relative path, default: current app folder FileServer).
+    -i --init - initialize database.
+    -h --help - help.
 
-    pass
+    """
+    p = argparse.ArgumentParser(
+        description='Please specify following arguments')
+    p.add_argument('-p', '--port', metavar='PORT', type=int, default=8080,
+                   help='port for application')
+    p.add_argument('-d', '--directory', metavar='DIR', type=str, default=None,
+                   help='working directory')
+    p.add_argument('-i', '--init', action='store_true', default=False,
+                   help='initialize database')
+    # either verbose or quiet, can be default
+
+    return p
 
 
 def get_files():
@@ -107,19 +121,22 @@ def change_dir(path):
     """
     FileServiceNoClass.change_dir(path)
 
+def summ(a: int, b: int):
+    return a+b
 
 def main():
-    """Entry point of app.
-
+    """Entry point of app
     Get and parse command line parameters and configure web app.
     Command line options:
     -p --port - port (default: 8080).
     -f --folder - working directory (absolute or relative path, default: current app folder FileServer).
     -i --init - initialize database.
     -h --help - help.
-
     """
-    pass
+
+    args = commandline_parser().parse_args()
+    change_dir(args.directory)
+    
 
 if __name__ == '__main__':
     main()
