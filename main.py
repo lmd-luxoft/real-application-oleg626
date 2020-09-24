@@ -18,12 +18,30 @@ def commandline_parser() -> argparse.ArgumentParser:
 
     Parse port and working directory parameters from command line.
 
+    -p --port - port (default: 8080).
+    -f --folder - working directory (absolute or relative path, default: current app folder FileServer).
+    -i --init - initialize database.
+    -h --help - help.
+
     """
+    p = argparse.ArgumentParser(
+        description='Please specify following arguments')
+    p.add_argument('-p', '--port', metavar='PORT', type=int, default=8080,
+                   help='port for application')
+    p.add_argument('-d', '--directory', metavar='DIR', type=str, default=None,
+                   help='working directory')
+    p.add_argument('-i', '--init', action='store_true', default=False,
+                   help='initialize database')
+    # either verbose or quiet, can be default
 
-    pass
+    return p
 
 
-def get_file_data(path):
+def get_files():
+    files = FileServiceNoClass.get_files()
+    return files
+
+def get_file_data(filename):
     """Get full info about file.
 
     Args:
@@ -42,17 +60,19 @@ def get_file_data(path):
         ValueError: if security level is invalid.
 
     """
+    assert os.path.exists(filename), ("File doesn't exist")
 
-    pass
+    file_data = FileServiceNoClass.get_file_data(filename)
+    return file_data
 
 
-def create_file(path):
+def create_file(file_name):
     """Create new .txt file.
 
     Method generates name of file from random string with digits and latin letters.
 
     Args:
-        path (str): Working directory path.
+        file_name (str): file to create without .txt extension.
 
     Returns:
         Dict, which contains name of created file. Keys:
@@ -67,15 +87,17 @@ def create_file(path):
         ValueError: if security level is invalid.
 
     """
+    file_content = input()
 
-    pass
+    return FileServiceNoClass.create_file(file_name, file_content)
 
 
-def delete_file(path):
+
+def delete_file(filename):
     """Delete file.
 
     Args:
-        path (str): Working directory path.
+        filename (str): File to delete without .txt extension
 
     Returns:
         Str with filename with .txt file extension.
@@ -84,8 +106,7 @@ def delete_file(path):
         AssertionError: if file does not exist.
 
     """
-
-    pass
+    return FileServiceNoClass.delete_file(filename)
 
 
 def change_dir(path):
@@ -98,24 +119,24 @@ def change_dir(path):
         Str with successfully result.
 
     """
+    FileServiceNoClass.change_dir(path)
 
-    pass
-
+def summ(a: int, b: int):
+    return a+b
 
 def main():
-    """Entry point of app.
-
+    """Entry point of app
     Get and parse command line parameters and configure web app.
     Command line options:
     -p --port - port (default: 8080).
     -f --folder - working directory (absolute or relative path, default: current app folder FileServer).
     -i --init - initialize database.
     -h --help - help.
-
     """
 
-    pass
-
+    args = commandline_parser().parse_args()
+    change_dir(args.directory)
+    
 
 if __name__ == '__main__':
     main()

@@ -3,6 +3,7 @@
 
 
 import os
+import datetime
 import sys
 import server.utils as utils
 
@@ -19,8 +20,10 @@ def change_dir(path):
         AssertionError: if directory does not exist.
 
     """
+    assert os.path.exists(path), ("Path doesn't exist")
 
-    pass
+    os.chdir(path)
+    print("Current location", os.getcwd())
 
 
 def get_file_data(filename):
@@ -42,8 +45,18 @@ def get_file_data(filename):
         ValueError: if security level is invalid.
 
     """
+    filename_with_txt = filename + '.txt'
+    create_date = os.path.getctime(filename_with_txt)
+    create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+    edit_date = os.path.getmtime(filename_with_txt)
+    edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+    size = os.path.getsize(filename_with_txt)
 
-    pass
+    with open(filename_with_txt, 'r') as f:
+        data = f.read()
+
+    file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date, 'size': size}
+    return file_data
 
 
 def get_files():
@@ -57,16 +70,29 @@ def get_files():
             size (str): size of file in bytes.
 
     """
+    list_of_files = os.listdir()
+    files_data = []
+    for file in list_of_files:
+        if os.path.isfile(file):
+            create_date = os.path.getctime(file)
+            create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+            edit_date = os.path.getmtime(file)
+            edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+            size = os.path.getsize(file)
+            files_data.append({'name' : file, 'create date': create_date, 'edit date' : edit_date, 'size': size})
+    return files_data
 
-    pass
 
 
-def create_file(content=None, security_level=None):
+def create_file(filename, content=None, security_level=None):
+
     """Create new .txt file.
+
 
     Method generates name of file from random string with digits and latin letters.
 
     Args:
+        filename (str): Name of the file without .txt extension
         content (str): String with file content,
         security_level (str): String with security level.
 
@@ -83,9 +109,13 @@ def create_file(content=None, security_level=None):
         ValueError: if security level is invalid.
 
     """
+    filename_with_txt = filename + ".txt"
+    assert not os.path.exists(filename_with_txt), ("File already exists")
 
-    pass
+    with open(filename_with_txt, 'w') as f:
+        f.write(content)
 
+    return get_file_data(filename)
 
 def delete_file(filename):
     """Delete file.
@@ -100,5 +130,10 @@ def delete_file(filename):
         AssertionError: if file does not exist.
 
     """
+    filename_with_txt = filename + ".txt"
+    assert os.path.isfile(filename_with_txt), ("File doesn't exist")
 
-    pass
+    os.remove(filename_with_txt)
+
+    return filename_with_txt
+
