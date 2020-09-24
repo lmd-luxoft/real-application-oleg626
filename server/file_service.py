@@ -7,17 +7,22 @@ import server.utils as utils
 from collections import OrderedDict
 from server.crypto import BaseCipher, AESCipher, RSACipher, HashAPI
 
+class SingletonType(type):
+    def __call__(cls, *args, **kwargs):
+        try:
+            return cls.__instance
+        except AttributeError:
+            cls.__instance = super(SingletonType, cls).__call__(*args, **kwargs)
+            return cls.__instance
 
-class FileService:
+class FileService(metaclass=SingletonType):
     """Singleton class with methods for working with file system.
 
     """
+    __path = "C:/"
 
-    def __new__(cls, *args, **kwargs):
-        pass
-
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self):
+        print('File service initialized')
 
     @property
     def path(self) -> str:
@@ -27,8 +32,7 @@ class FileService:
             Str with working directory path.
 
         """
-
-        pass
+        return self.__path
 
     @path.setter
     def path(self, value: str):
@@ -38,11 +42,9 @@ class FileService:
             value (str): Working directory path.
 
         """
+        self.__path = value
 
-        pass
-
-    @staticmethod
-    def change_dir(path: str):
+    def change_dir(self, path: str):
         """Change current directory of app.
 
         Args:
@@ -52,8 +54,11 @@ class FileService:
             AssertionError: if directory does not exist.
 
         """
+        assert os.path.exists(path), "Path doesn't exist"
 
-        pass
+        os.chdir(path)
+        self.path = os.getcwd()
+
 
     def get_file_data(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file.
@@ -76,8 +81,20 @@ class FileService:
             ValueError: if security level is invalid.
 
         """
+        filename_with_txt = filename + '.txt'
+        create_date = os.path.getctime(filename_with_txt)
+        create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+        edit_date = os.path.getmtime(filename_with_txt)
+        edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+        size = os.path.getsize(filename_with_txt)
 
-        pass
+        with open(filename_with_txt, 'r') as f:
+            data = f.read()
+
+        file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date,
+                     'size': size}
+        return file_data
+
 
     async def get_file_data_async(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file. Asynchronous version.
@@ -114,11 +131,22 @@ class FileService:
                 size (str): size of file in bytes.
 
         """
+        list_of_files = os.listdir()
+        files_data = []
+        for file in list_of_files:
+            if os.path.isfile(file):
+                create_date = os.path.getctime(file)
+                create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+                edit_date = os.path.getmtime(file)
+                edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+                size = os.path.getsize(file)
+                files_data.append({'name': file, 'create date': create_date, 'edit date': edit_date, 'size': size})
+        return files_data
 
         pass
 
-    async def create_file(
-            self, content: str = None, security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
+    async def create_file(self, filename : str, content: str = None,
+                          security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
         """Create new .txt file.
 
         Method generates name of file from random string with digits and latin letters.
@@ -141,8 +169,13 @@ class FileService:
             ValueError: if security level is invalid.
 
         """
+        filename_with_txt = filename + ".txt"
+        assert not os.path.exists(filename_with_txt), ("File already exists")
 
-        pass
+        with open(filename_with_txt, 'w') as f:
+            f.write(content)
+
+        return get_file_data(filename)
 
     def delete_file(self, filename: str):
         """Delete file.
@@ -157,8 +190,12 @@ class FileService:
             AssertionError: if file does not exist.
 
         """
+        filename_with_txt = filename + ".txt"
+        assert os.path.isfile(filename_with_txt), ("File doesn't exist")
 
-        pass
+        os.remove(filename_with_txt)
+
+        return filename_with_txt
 
 
 class FileServiceSigned(FileService):
