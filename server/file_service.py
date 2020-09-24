@@ -3,6 +3,7 @@
 
 import os
 import typing
+import datetime
 import server.utils as utils
 from collections import OrderedDict
 from server.crypto import BaseCipher, AESCipher, RSACipher, HashAPI
@@ -54,11 +55,14 @@ class FileService(metaclass=SingletonType):
             AssertionError: if directory does not exist.
 
         """
-        assert os.path.exists(path), "Path doesn't exist"
+        try:
+            assert os.path.exists(path), "Path doesn't exist"
 
-        os.chdir(path)
-        self.path = os.getcwd()
+            os.chdir(path)
+            self.path = os.getcwd()
 
+        except AssertionError as msg:
+            print(msg)
 
     def get_file_data(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file.
@@ -82,18 +86,22 @@ class FileService(metaclass=SingletonType):
 
         """
         filename_with_txt = filename + '.txt'
-        create_date = os.path.getctime(filename_with_txt)
-        create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
-        edit_date = os.path.getmtime(filename_with_txt)
-        edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
-        size = os.path.getsize(filename_with_txt)
+        try:
+            assert os.path.isfile(filename_with_txt), "File doesn't exist"
+            create_date = os.path.getctime(filename_with_txt)
+            create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
+            edit_date = os.path.getmtime(filename_with_txt)
+            edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
+            size = os.path.getsize(filename_with_txt)
 
-        with open(filename_with_txt, 'r') as f:
-            data = f.read()
+            with open(filename_with_txt, 'r') as f:
+                data = f.read()
 
-        file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date,
-                     'size': size}
-        return file_data
+            file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date,
+                         'size': size}
+            return file_data
+        except AssertionError as msg:
+            print(msg)
 
 
     async def get_file_data_async(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
@@ -145,7 +153,7 @@ class FileService(metaclass=SingletonType):
 
         pass
 
-    async def create_file(self, filename : str, content: str = None,
+    def create_file(self, filename : str, content: str = None,
                           security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
         """Create new .txt file.
 
@@ -170,12 +178,16 @@ class FileService(metaclass=SingletonType):
 
         """
         filename_with_txt = filename + ".txt"
-        assert not os.path.exists(filename_with_txt), ("File already exists")
+        try:
+            assert not os.path.exists(filename_with_txt), ("File already exists")
 
-        with open(filename_with_txt, 'w') as f:
-            f.write(content)
+            with open(filename_with_txt, 'w') as f:
+                f.write(content)
 
-        return get_file_data(filename)
+            return self.get_file_data(filename)
+
+        except AssertionError as msg:
+            print(msg)
 
     def delete_file(self, filename: str):
         """Delete file.
@@ -191,11 +203,15 @@ class FileService(metaclass=SingletonType):
 
         """
         filename_with_txt = filename + ".txt"
-        assert os.path.isfile(filename_with_txt), ("File doesn't exist")
+        try:
+            assert os.path.isfile(filename_with_txt), "File doesn't exist"
+            os.remove(filename_with_txt)
 
-        os.remove(filename_with_txt)
+            return filename_with_txt
+        except AssertionError as msg:
+            print(msg)
 
-        return filename_with_txt
+
 
 
 class FileServiceSigned(FileService):
