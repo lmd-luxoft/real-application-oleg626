@@ -28,17 +28,16 @@ def commandline_parser() -> argparse.ArgumentParser:
         description='Please specify following arguments')
     p.add_argument('-p', '--port', metavar='PORT', type=int, default=8080,
                    help='port for application')
-    p.add_argument('-d', '--directory', metavar='DIR', type=str, default=None,
+    p.add_argument('-d', '--directory', metavar='DIR', type=str, default="C:/",
                    help='working directory')
     p.add_argument('-i', '--init', action='store_true', default=False,
                    help='initialize database')
-    # either verbose or quiet, can be default
 
     return p
 
 
 def get_files():
-    files = FileServiceNoClass.get_files()
+    files = FileService().get_files()
     return files
 
 def get_file_data(filename):
@@ -62,7 +61,7 @@ def get_file_data(filename):
     """
     assert os.path.exists(filename), ("File doesn't exist")
 
-    file_data = FileServiceNoClass.get_file_data(filename)
+    file_data = FileService().get_file_data(filename)
     return file_data
 
 
@@ -87,9 +86,9 @@ def create_file(file_name):
         ValueError: if security level is invalid.
 
     """
-    file_content = input()
+    file_content = input("Enter file content: ")
 
-    return FileServiceNoClass.create_file(file_name, file_content)
+    return FileService().create_file(file_name, file_content)
 
 
 
@@ -106,7 +105,7 @@ def delete_file(filename):
         AssertionError: if file does not exist.
 
     """
-    return FileServiceNoClass.delete_file(filename)
+    return FileService().delete_file(filename)
 
 
 def change_dir(path):
@@ -119,7 +118,7 @@ def change_dir(path):
         Str with successfully result.
 
     """
-    FileServiceNoClass.change_dir(path)
+    FileService().change_dir(path)
 
 def summ(a: int, b: int):
     return a+b
