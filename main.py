@@ -44,7 +44,7 @@ def get_file_data(filename):
     """Get full info about file.
 
     Args:
-        path (str): Working directory path.
+        filename (str): Working directory path.
 
     Returns:
         Dict, which contains full info about file. Keys:
@@ -59,8 +59,6 @@ def get_file_data(filename):
         ValueError: if security level is invalid.
 
     """
-    assert os.path.exists(filename), ("File doesn't exist")
-
     file_data = FileService().get_file_data(filename)
     return file_data
 
@@ -132,10 +130,24 @@ def main():
     -i --init - initialize database.
     -h --help - help.
     """
+    #fileService = FileService()
+
 
     args = commandline_parser().parse_args()
     change_dir(args.directory)
-    
+
+    while(True):
+        command = str(input("Enter the command: "))
+        if command.startswith("create "):
+            create_file(command[7:])
+        elif command.startswith("get "):
+            print(get_file_data(command[4:]))
+        elif command.startswith("list"):
+            print(get_files())
+        elif command.startswith("delete "):
+            delete_file(command[7:])
+        elif command == 'exit':
+            break
 
 if __name__ == '__main__':
     main()
