@@ -36,7 +36,7 @@ def commandline_parser() -> argparse.ArgumentParser:
 
 
 def get_files():
-    files = FileService().get_files()
+    files = FileServiceSigned().get_files()
     return files
 
 def get_file_data(filename):
@@ -58,7 +58,7 @@ def get_file_data(filename):
         ValueError: if security level is invalid.
 
     """
-    file_data = FileService().get_file_data(filename)
+    file_data = FileServiceSigned().get_file_data(filename)
     return file_data
 
 
@@ -85,8 +85,7 @@ def create_file(file_name):
     """
     file_content = input("Enter file content: ")
 
-    return FileService().create_file(file_name, file_content)
-
+    return FileServiceSigned().create_file(file_name, file_content)
 
 
 def delete_file(filename):
@@ -102,7 +101,7 @@ def delete_file(filename):
         AssertionError: if file does not exist.
 
     """
-    return FileService().delete_file(filename)
+    return FileServiceSigned().delete_file(filename)
 
 
 def change_dir(path):
@@ -115,10 +114,9 @@ def change_dir(path):
         Str with successfully result.
 
     """
-    FileService().change_dir(path)
+    FileServiceSigned().change_dir(path)
 
-def summ(a: int, b: int):
-    return a+b
+
 
 def main():
     """Entry point of app
@@ -129,13 +127,12 @@ def main():
     -i --init - initialize database.
     -h --help - help.
     """
-    #fileService = FileService()
 
+    fileServiceSigned = FileServiceSigned()
 
     args = commandline_parser().parse_args()
-    change_dir(args.directory)
 
-    while(True):
+    while True:
         command = str(input("Enter the command: "))
         if command.startswith("create "):
             create_file(command[7:])

@@ -8,6 +8,7 @@ import server.utils as utils
 from collections import OrderedDict
 from server.crypto import BaseCipher, AESCipher, RSACipher, HashAPI
 
+
 class SingletonType(type):
     def __call__(cls, *args, **kwargs):
         try:
@@ -16,11 +17,12 @@ class SingletonType(type):
             cls.__instance = super(SingletonType, cls).__call__(*args, **kwargs)
             return cls.__instance
 
+
 class FileService(metaclass=SingletonType):
     """Singleton class with methods for working with file system.
 
     """
-    __path = "C:/"
+    __path = "C:/work/training"
 
     def __init__(self):
         print('File service initialized')
@@ -103,7 +105,6 @@ class FileService(metaclass=SingletonType):
         except AssertionError as msg:
             print(msg)
 
-
     async def get_file_data_async(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file. Asynchronous version.
 
@@ -128,7 +129,8 @@ class FileService(metaclass=SingletonType):
 
         pass
 
-    def get_files(self) -> typing.List[typing.Dict[str, str]]:
+    @staticmethod
+    def get_files() -> typing.List[typing.Dict[str, str]]:
         """Get info about all files in working directory.
 
         Returns:
@@ -160,6 +162,7 @@ class FileService(metaclass=SingletonType):
         Method generates name of file from random string with digits and latin letters.
 
         Args:
+            filename (str): Name of the file
             content (str): String with file content,
             security_level (str): String with security level,
             user_id (int): User Id.
@@ -179,17 +182,18 @@ class FileService(metaclass=SingletonType):
         """
         filename_with_txt = filename + ".txt"
         try:
-            assert not os.path.exists(filename_with_txt), ("File already exists")
+            assert not os.path.exists(filename_with_txt), "File already exists"
 
             with open(filename_with_txt, 'w') as f:
                 f.write(content)
 
-            return self.get_file_data(filename)
+            return FileService.get_file_data(self, filename)
 
         except AssertionError as msg:
             print(msg)
 
-    def delete_file(self, filename: str):
+    @staticmethod
+    def delete_file(filename: str):
         """Delete file.
 
         Args:
@@ -212,13 +216,10 @@ class FileService(metaclass=SingletonType):
             print(msg)
 
 
-
-
 class FileServiceSigned(FileService):
     """Singleton class with methods for working with file system and file signatures.
 
     """
-
     def get_file_data(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file.
 
@@ -241,8 +242,17 @@ class FileServiceSigned(FileService):
             ValueError: if security level is invalid.
 
         """
-
-        pass
+        file_data = super(FileServiceSigned, self).get_file_data(filename, user_id)
+        raw_string = "_".join([str(x) for x in list(file_data.values())])
+        actual_hash = HashAPI.hash_md5(raw_string)
+        try:
+            assert os.path.isfile(filename+'.md5'), "Signature doesn't exist"
+            with open(filename + '.md5') as md5:
+                expected_hash = md5.read()
+            assert actual_hash == expected_hash, "Hash doesn't match"
+            return file_data
+        except AssertionError as msg:
+            print(msg)
 
     async def get_file_data_async(self, filename: str, user_id: int = None) -> typing.Dict[str, str]:
         """Get full info about file. Asynchronous version.
@@ -269,13 +279,14 @@ class FileServiceSigned(FileService):
 
         pass
 
-    async def create_file(
-            self, content: str = None, security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
+    def create_file(self, filename: str, content: str = None,
+                    security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
         """Create new .txt file with signature file.
 
         Method generates name of file from random string with digits and latin letters.
 
         Args:
+            filename (str): Name of the file
             content (str): String with file content,
             security_level (str): String with security level,
             user_id (int): User Id.
@@ -293,5 +304,33 @@ class FileServiceSigned(FileService):
             ValueError: if security level is invalid.
 
         """
+        super(FileServiceSigned, self).create_file(filename, content, security_level, user_id)
+        file_data = super(FileServiceSigned, self).get_file_data(filename)
+        raw_string = "_".join([str(x) for x in list(file_data.values())])
+        hashed_string = HashAPI.hash_md5(raw_string)
+        with open(filename+'.md5', 'w') as md5:
+            md5.write(hashed_string)
+        return file_data
 
-        pass
+    def delete_file(self, filename: str):
+        """Delete file.
+
+        Args:
+            filename (str): Filename without .txt file extension.
+
+        Returns:
+            Str with filename with .txt file extension.
+
+        Raises:
+            AssertionError: if file does not exist.
+        """
+        super(FileServiceSigned, self).delete_file(filename)
+
+        try:
+            filename_md5 = filename + '.md5'
+            assert os.path.isfile(filename_md5), "md5 doesn't exist"
+            os.remove(filename_md5)
+
+            return filename_md5
+        except AssertionError as msg:
+            print(msg)
