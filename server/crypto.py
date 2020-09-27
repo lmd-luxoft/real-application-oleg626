@@ -3,9 +3,9 @@
 
 import os
 import hashlib
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Random import get_random_bytes
+from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import AES, PKCS1_OAEP
+from Cryptodome.Random import get_random_bytes
 from typing import Tuple, BinaryIO
 
 key_folder = os.environ['KEY_DIR']
@@ -47,8 +47,13 @@ class HashAPI:
             AssertionError: if input string is not set.
 
         """
+        try:
+            assert len(input_str) > 0, "Input string is empty"
 
-        pass
+            hash_obj = hashlib.md5(input_str.encode())
+            return hash_obj.hexdigest()
+        except AssertionError as msg:
+            print(msg)
 
 
 class BaseCipher:
