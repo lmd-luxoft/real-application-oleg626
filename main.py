@@ -6,6 +6,7 @@ import os
 import sys
 import logging
 import json
+from server.crypto import AESCipher
 from aiohttp import web
 from server.handler import Handler
 #from server.database import DataBase
@@ -117,6 +118,41 @@ def change_dir(path):
     FileServiceSigned().change_dir(path)
 
 
+def generate_AES_key(filename):
+    """ generates AES key and saves it to file
+
+    Args:
+        filename (str): Name of the file
+
+    """
+    key_bytes = AESCipher().generate_AES_key()
+    FileServiceSigned().create_file(filename, key_bytes.decode())
+
+def encrypt_file_AES(filename: str, key_file: str):
+    """ encrypt a file
+
+    :param filename (str): File to encrypt
+    :paran key_file (str): File with encryption key
+    """
+    with open(key_file, 'r') as f:
+        key = f.read()
+        key_bytes = key.encode()
+
+    with open(filename, 'r') as f:
+        data = f.read()
+        cipher_text, tag, nonce = AESCipher().encrypt(data.encode(), key_bytes)
+
+    with open(filename[:-4] + '_e.bin', 'wb') as f:
+        [f.write(x) for x in (nonce, tag, cipher_text)]
+
+    return cipher_text
+
+
+def decrypt_file_AES(filename: str, key_file: str, save_to: str):
+    data = AESCipher().decrypt(filename, key_file)
+
+    FileServiceSigned().create_file(save_to, data.decode())
+
 
 def main():
     """Entry point of app
@@ -128,8 +164,6 @@ def main():
     -h --help - help.
     """
 
-    fileServiceSigned = FileServiceSigned()
-
     args = commandline_parser().parse_args()
 
     while True:
@@ -139,11 +173,23 @@ def main():
         elif command.startswith("get "):
             print(get_file_data(command[4:]))
         elif command.startswith("list"):
-            print(get_files())
+            for file in get_files():
+                print(file)
         elif command.startswith("delete "):
             delete_file(command[7:])
+        elif command.startswith("encrypt "):
+            filename = command[8:]
+            aes_key_file = input("Enter key file name: ")
+            print(f'generated key %s' % generate_AES_key(aes_key_file))
+            encrypt_file_AES(filename, aes_key_file)
+        elif command.startswith("decrypt "):
+            filename = command[8:]
+            key_file = input("Enter keyfile to use: ")
+            save_to = input("Enter file to save: ")
+            decrypt_file_AES(filename, key_file, save_to)
         elif command == 'exit':
             break
+
 
 if __name__ == '__main__':
     main()

@@ -6,16 +6,8 @@ import typing
 import datetime
 import server.utils as utils
 from collections import OrderedDict
-from server.crypto import BaseCipher, AESCipher, RSACipher, HashAPI
-
-
-class SingletonType(type):
-    def __call__(cls, *args, **kwargs):
-        try:
-            return cls.__instance
-        except AttributeError:
-            cls.__instance = super(SingletonType, cls).__call__(*args, **kwargs)
-            return cls.__instance
+from server.crypto import HashAPI
+from server.singleton import SingletonType
 
 
 class FileService(metaclass=SingletonType):
@@ -70,7 +62,7 @@ class FileService(metaclass=SingletonType):
         """Get full info about file.
 
         Args:
-            filename (str): Filename without .txt file extension,
+            filename (str): Filename with file extension,
             user_id (int): User Id.
 
         Returns:
@@ -87,19 +79,18 @@ class FileService(metaclass=SingletonType):
             ValueError: if security level is invalid.
 
         """
-        filename_with_txt = filename + '.txt'
         try:
-            assert os.path.isfile(filename_with_txt), "File doesn't exist"
-            create_date = os.path.getctime(filename_with_txt)
+            assert os.path.isfile(filename), "File doesn't exist"
+            create_date = os.path.getctime(filename)
             create_date = datetime.datetime.fromtimestamp(create_date).strftime('%Y-%m-%d %H:%M:%S')
-            edit_date = os.path.getmtime(filename_with_txt)
+            edit_date = os.path.getmtime(filename)
             edit_date = datetime.datetime.fromtimestamp(edit_date).strftime('%Y-%m-%d %H:%M:%S')
-            size = os.path.getsize(filename_with_txt)
+            size = os.path.getsize(filename)
 
-            with open(filename_with_txt, 'r') as f:
+            with open(filename, read_key) as f:
                 data = f.read()
 
-            file_data = {'name': filename_with_txt, 'data': data, 'create date': create_date, 'edit date': edit_date,
+            file_data = {'name': filename, 'data': data, 'create date': create_date, 'edit date': edit_date,
                          'size': size}
             return file_data
         except AssertionError as msg:
@@ -155,7 +146,7 @@ class FileService(metaclass=SingletonType):
 
         pass
 
-    def create_file(self, filename : str, content: str = None,
+    def create_file(self, filename: str, content: str = None,
                           security_level: str = None, user_id: int = None) -> typing.Dict[str, str]:
         """Create new .txt file.
 
@@ -187,7 +178,7 @@ class FileService(metaclass=SingletonType):
             with open(filename_with_txt, 'w') as f:
                 f.write(content)
 
-            return FileService.get_file_data(self, filename)
+            return FileService.get_file_data(self, filename_with_txt)
 
         except AssertionError as msg:
             print(msg)
@@ -304,8 +295,9 @@ class FileServiceSigned(FileService):
             ValueError: if security level is invalid.
 
         """
+        filename_with_txt = filename + ".txt"
         super(FileServiceSigned, self).create_file(filename, content, security_level, user_id)
-        file_data = super(FileServiceSigned, self).get_file_data(filename)
+        file_data = super(FileServiceSigned, self).get_file_data(filename_with_txt)
         raw_string = "_".join([str(x) for x in list(file_data.values())])
         hashed_string = HashAPI.hash_md5(raw_string)
         with open(filename+'.md5', 'w') as md5:

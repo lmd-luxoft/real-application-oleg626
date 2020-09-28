@@ -7,6 +7,7 @@ from Cryptodome.PublicKey import RSA
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Random import get_random_bytes
 from typing import Tuple, BinaryIO
+from server.singleton import SingletonType
 
 key_folder = os.environ['KEY_DIR']
 
@@ -56,7 +57,7 @@ class HashAPI:
             print(msg)
 
 
-class BaseCipher:
+class BaseCipher(metaclass=SingletonType):
     """Base cipher class.
 
     """
@@ -104,62 +105,59 @@ class AESCipher(BaseCipher):
 
     """
 
-    def __init__(self, user_id: int):
+    def __init__(self):
+        self.__key__ = get_random_bytes(16)
         pass
 
-    def encrypt(self, data: bytes) -> Tuple[bytes, bytes, bytes, bytes]:
+    def encrypt(self, data: bytes, key: bytes = None) -> Tuple[bytes, bytes, bytes, bytes]:
         """Encrypt data.
 
         Args:
             data (bytes): Input data for encrypting.
+            key (bytes): AES key
 
         Returns:
             Tuple with bytes values, which contains cipher text, tag, nonce and session key.
 
         """
+        if key is None:
+            key = self.__key__
+        cipher = AES.new(key, AES.MODE_EAX)
+        cipher_text, tag = cipher.encrypt_and_digest(data)
+        return cipher_text, tag, cipher.nonce
 
-        pass
-
-    def decrypt(self, input_file: BinaryIO) -> bytes:
+    def decrypt(self, filename: BinaryIO, key_file: str) -> bytes:
         """Decrypt data.
 
         Args:
-            input_file (BinaryIO): Input file with data for decrypting.
+            filename (BinaryIO): Input file with data for decrypting.
 
         Returns:
             Bytes with decrypted data.
 
         """
+        with open(filename, 'rb') as f:
+            nonce, tag, cipher_text = [f.read(x) for x in (16, 16, -1)]
 
-        pass
+        with open(key_file, 'rb') as f:
+            key_bytes = f.read()
+        cipher = AES.new(key_bytes, AES.MODE_EAX, nonce)
+        data = cipher.decrypt_and_verify(cipher_text, tag)
+        return data
 
-    @staticmethod
-    def decrypt_aes_data(cipher_text: bytes, tag: bytes, nonce: bytes, session_key: bytes) -> bytes:
-        """Decrypt AES data.
+    def generate_AES_key(self):
+        """ generate AES key and save it to file
 
-        Args:
-            cipher_text (bytes): Cipher text for decrypting,
-            tag (bytes): AES tag,
-            nonce (bytes): AES nonce,
-            session_key (bytes): AES session key.
-
-        Returns:
-            Bytes with decrypted data.
+        filename (str): Name of the file to save AES key
 
         """
+        key_bytes = get_random_bytes(16)
 
-        pass
+        self.__key__ = key_bytes
+        return key_bytes
 
-    def write_cipher_text(self, data: bytes, out_file: BinaryIO):
-        """Encrypt data and write cipher text into output file.
-
-        Args:
-            data (bytes): Encrypted data,
-            out_file(BinaryIO): Output file.
-
-        """
-
-        pass
+    def get_key(self):
+        return self.__key__
 
 
 class RSACipher(AESCipher):
