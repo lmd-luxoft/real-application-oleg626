@@ -108,12 +108,15 @@ class Handler(metaclass=SingletonType):
 
         """
         print("change_file_dir")
-        path = await request.post()
-        patyh = path.get('path')
-        #print(request.app["name"])
+        result = ''
+        stream = request.content
+        while not stream.at_eof():
+            line = await stream.read()
+            result += line.decode('utf-8')
+        data = json.loads(result)
 
-        print(f'path is {patyh}')
-        FileService().change_dir(path)
+        print(data)
+        FileService().change_dir(data['path'])
         return web.Response(text = '')
 
     @UsersAPI.authorized
