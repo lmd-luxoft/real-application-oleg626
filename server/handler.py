@@ -11,14 +11,15 @@ from server.users import UsersAPI
 from server.role_model import RoleModel
 from server.users_sql import UsersSQLAPI
 from server.role_model_sql import RoleModelSQL
+from server.singleton import SingletonType
 
 
-class Handler:
+class Handler(metaclass=SingletonType):
     """Aiohttp handler with coroutines.
 
     """
 
-    def __init__(self, path: str):
+    def __init__(self):
         pass
 
     async def handle(self, request: web.Request, *args, **kwargs) -> web.Response:
@@ -31,13 +32,9 @@ class Handler:
             Response: JSON response with status.
 
         """
+        print(request.content)
+        return web.Response(text="Hello world")
 
-        pass
-
-    @UsersAPI.authorized
-    @RoleModel.role_model
-    # @UsersSQLAPI.authorized
-    # @RoleModelSQL.role_model
     async def get_files(self, request: web.Request, *args, **kwargs) -> web.Response:
         """Coroutine for getting info about all files in working directory.
 
@@ -48,13 +45,11 @@ class Handler:
             Response: JSON response with success status and data or error status and error message.
 
         """
+        print("get_files")
+        text = FileService().get_files()
+        output = str(text)
+        return web.json_response(data = {'text' : output, 'status': 'success'})
 
-        pass
-
-    @UsersAPI.authorized
-    @RoleModel.role_model
-    # @UsersSQLAPI.authorized
-    # @RoleModelSQL.role_model
     async def get_file_info(self, request: web.Request, *args, **kwargs) -> web.Response:
         """Coroutine for getting full info about file in working directory.
 
@@ -68,13 +63,11 @@ class Handler:
             HTTPBadRequest: 400 HTTP error, if error.
 
         """
+        print("get_file_info")
+        file_data = FileServiceSigned().get_file_data(request.rel_url.query)
+        string = str(file_data)
+        return web.Response(text = string)
 
-        pass
-
-    @UsersAPI.authorized
-    @RoleModel.role_model
-    # @UsersSQLAPI.authorized
-    # @RoleModelSQL.role_model
     async def create_file(self, request: web.Request, *args, **kwargs) -> web.Response:
         """Coroutine for creating file.
 
@@ -93,8 +86,35 @@ class Handler:
             HTTPBadRequest: 400 HTTP error, if error.
 
         """
+        print("create_file")
+        name = request.rel_url.query['filename']
+        return web.Response(text = 'create file ' + name)
 
-        pass
+    @staticmethod
+    async def change_file_dir(request: web.Request, *args, **kwargs) -> web.Response:
+        """Coroutine for changing working directory with files.
+
+        Args:
+            request (Request): aiohttp request, contains JSON in body. JSON format:
+            {
+                "path": "string. Directory path. Required",
+            }.
+
+        Returns:
+            Response: JSON response with success status and success message or error status and error message.
+
+        Raises:
+            HTTPBadRequest: 400 HTTP error, if error.
+
+        """
+        print("change_file_dir")
+        path = await request.post()
+        patyh = path.get('path')
+        #print(request.app["name"])
+
+        print(f'path is {patyh}')
+        FileService().change_dir(path)
+        return web.Response(text = '')
 
     @UsersAPI.authorized
     @RoleModel.role_model
@@ -392,25 +412,4 @@ class Handler:
 
         pass
 
-    @UsersAPI.authorized
-    @RoleModel.role_model
-    # @UsersSQLAPI.authorized
-    # @RoleModelSQL.role_model
-    async def change_file_dir(self, request: web.Request, *args, **kwargs) -> web.Response:
-        """Coroutine for changing working directory with files.
 
-        Args:
-            request (Request): aiohttp request, contains JSON in body. JSON format:
-            {
-                "path": "string. Directory path. Required",
-            }.
-
-        Returns:
-            Response: JSON response with success status and success message or error status and error message.
-
-        Raises:
-            HTTPBadRequest: 400 HTTP error, if error.
-
-        """
-
-        pass

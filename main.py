@@ -153,6 +153,18 @@ def decrypt_file_AES(filename: str, key_file: str, save_to: str):
 
     FileServiceSigned().create_file(save_to, data.decode())
 
+def start_web_server(port: int):
+    app = web.Application()
+
+    handler = Handler()
+
+    app.add_routes([
+        web.get('/files/list', handler.get_files),
+        web.get('/files?filename=name', handler.get_file_info),
+        web.get('/files', handler.create_file),
+        web.post('/change_file_dir', handler.change_file_dir)
+    ])
+    web.run_app(app)
 
 def main():
     """Entry point of app
@@ -165,7 +177,7 @@ def main():
     """
 
     args = commandline_parser().parse_args()
-
+    start_web_server(args.port)
     while True:
         command = str(input("Enter the command: "))
         if command.startswith("create "):
